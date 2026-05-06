@@ -2,105 +2,123 @@ using System;
 
 public class StockMarket
 {
+    static double money = 10;
+    static int trashAmount = 0;
+    static double tax = 0.1;
+    static char zakup = 'z';
+    static char sprzedaz = 's';
+    static bool FinishConditionsNotMet()
+    {
+        return money < 50 && (money > 0 || trashAmount > 0);
+    }
     public static void Main(string[] args)
     {
         Console.WriteLine("GIELDA SMIECI");
-        double money = 10;
-        int trashAmount = 0;
-        double tax = 0.1;
-        int amount = 0;
 
-        while (money < 50 && (money > 0 || trashAmount > 0))
+        while (FinishConditionsNotMet())
         {
             Console.WriteLine("\nTwoj stan konta: " + Math.Round(money, 2) + "$");
             Console.WriteLine("Ilosc posiadanych smieci: " + trashAmount);
             Console.WriteLine("Wybierz czy chcesz zakupic (z) czy sprzedac (s) smieci?");
-            
-            string input = Console.ReadLine();
-            if (string.IsNullOrEmpty(input)) continue;
-            char action = input[0];
 
-            if (action == 'z')
+            string inputAction = Console.ReadLine();
+            if (string.IsNullOrEmpty(inputAction)) continue;
+            char action = inputAction[0];
+
+            if (action == zakup)
             {
                 Random rnd = new Random();
                 double price = Math.Round(1.5 + rnd.NextDouble(), 1);
-                Console.WriteLine("Cena wynosi: " + price + "$");
+                Console.WriteLine("Cena jednostkowa wynosi: " + price + "$");
 
                 bool incorrectAmount = true;
                 while (incorrectAmount)
                 {
                     Console.WriteLine("Ile smieci chcesz zakupic?");
                     string inputAmount = Console.ReadLine();
-                    if (!int.TryParse(inputAmount, out amount))
+
+                    if (!int.TryParse(inputAmount, out int amount))
                     {
                         Console.WriteLine("To nie jest liczba! Proba kosztowala cie podatek.");
                         money -= tax;
-                        continue; // Przeskakuje z powrotem do pytania "Ile smieci..."
+                        continue;
                     }
                     if (amount < 0)
                     {
                         Console.WriteLine("Nie mozna wprowadzac wartosci ujemnych. Proba kosztowala cie podatek.");
                         money -= tax;
+                        continue;
                     }
-                    else
+                    double totalCost = price * amount;
+                    incorrectAmount = false;
+
+                    if (money >= totalCost)
                     {
-                        double totalCost = price * amount;
-                        
-                        if (money >= totalCost + tax)
+                        money -= totalCost;
+                        trashAmount += amount;
+
+                        if (amount > 0)
                         {
-                            money -= (totalCost + tax);
-                            trashAmount += amount;
-                            Console.WriteLine("Zakupiono " + amount + " szt. za " + totalCost + "$ + " + tax + "$ podatku.");
-                            incorrectAmount = false;
+                            Console.WriteLine($"Zakupiono {amount} szt. za {totalCost}$ + {tax}$ podatku.");
                         }
                         else
                         {
-                            Console.WriteLine("Za malo pieniedzy! Proba kosztowala Cie podatek.");
-                            money -= tax;
-                            incorrectAmount = false;
-                        }
+                            Console.WriteLine($"Nie zakupiono zadnych smieci. Zaplacono {tax}$ podatku.");
+                        }      
                     }
-                    if (money <= 0 && trashAmount <= 0) break; 
+                    else
+                    {
+                        Console.WriteLine("Za malo pieniedzy! Proba kosztowala Cie podatek.");
+                    }
+                    money -= tax; 
                 }
             }
-            else if (action == 's')
+            else if (action == sprzedaz)
             {
                 double sellPrice = 2.0;
+                Console.WriteLine("Cena jednostkowa wynosi: " + sellPrice + "$");
                 bool incorrectAmount = true;
                 while (incorrectAmount)
                 {
                     Console.WriteLine("Ile smieci chcesz sprzedac?");
                     string inputAmount = Console.ReadLine();
-                    if (!int.TryParse(inputAmount, out amount))
+
+                    if (!int.TryParse(inputAmount, out int amount))
                     {
                         Console.WriteLine("To nie jest liczba! Proba kosztowala cie podatek.");
                         money -= tax;
-                        continue; // Przeskakuje z powrotem do pytania "Ile smieci..."
+                        continue; 
                     }
 
                     if (amount < 0)
                     {
                         Console.WriteLine("Nie mozna wprowadzac wartosci ujemnych. Proba kosztowala cie podatek.");
                         money -= tax;
+                        continue;
                     }
-                    else if (amount > trashAmount)
+                    
+                    if (amount > trashAmount)
                     {
                         Console.WriteLine("Nie masz tylu smieci! Proba kosztowala cie podatek.");
-                        money -= tax;
-                        incorrectAmount = false;
-                    }
-                    else if (amount == 0)
-                    {
-                        incorrectAmount = false;
+                        money -= tax; 
+                        continue;
                     }
                     else
                     {
                         double earned = sellPrice * amount;
-                        money += (earned - tax);
+                        money += earned;
                         trashAmount -= amount;
-                        Console.WriteLine("Zarobiles: " + (earned - tax) + "$.");
+                        if(earned > 0)
+                        {
+                            Console.WriteLine("Zarobiles: " + (earned - tax) + "$.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Nie sprzedano zadnych smieci. Zaplacono" + tax + "$ podatku.");
+                        }
                         incorrectAmount = false;
                     }
+                    money -= tax;
                 }
             }
             else
