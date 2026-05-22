@@ -1,0 +1,57 @@
+using System;
+using System.Collections.Generic;
+
+public class ONP
+{
+    static void Main()
+    {
+        Console.WriteLine("ODWROCONA NOTACJA POLSKA");
+        Console.WriteLine("Wpisz twoje rownanie (operatory: '+', '-', '*', '/'; rozdzielaj znaki spacjami):");
+        string equation = Console.ReadLine();
+
+        if(string.IsNullOrWhiteSpace(equation))
+        {
+            Console.WriteLine("Nieprawidlowe dane. Sprobuj ponownie.\n\n");
+            Main();
+            return;
+        }
+
+        double result = Calculate(equation);
+        Console.WriteLine("Wynik: " + result);
+    }
+
+    static double Calculate(string expression)
+    {
+        var stack = new Stack<double>();
+        string[] tokens = expression.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        
+        foreach(string token in tokens)
+        {
+            if(double.TryParse(token, out double number))
+            {
+                stack.Push(number);
+            }
+            else if (token == "+" || token == "-" || token == "*" || token == "/")
+            {
+                double a = stack.Pop();
+                double b = stack.Pop();
+
+                double result = token switch
+                {
+                    "+" => a + b,
+                    "-" => b - a,
+                    "*" => a * b,
+                    "/" => b == 0 ? throw new DivideByZeroException("Nie mozna dzielic przez zero!") : b / a
+                };
+
+                stack.Push(result);
+            }
+            else
+            {
+                Console.WriteLine("Nieprawidlowe dane. Sprobuj ponownie.\n\n");
+                Main();
+            }
+        }
+        return stack.Pop();
+    }
+}
